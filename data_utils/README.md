@@ -66,7 +66,7 @@ python Dataset300_smallAtlas.py
 nnUNetv2_extract_fingerprint -d dataset_id -np 15
 ```
 
-6. Create plans for the nnUNet training. Here, we use ResEncL with isotropic spacing.
+6. Create plans for the nnUNet training. Here, we use ResEncL with isotropic spacing. To train other versions, substitute ResEncL by ResEncM or ResEncXL everywhere it appears in the commands below (see it appears twice in the next command).
 
 ```bash
 nnUNetv2_plan_experiment -d dataset_id -overwrite_target_spacing 1 1 1 -overwrite_plans_name nnUNetPlannerResEncL_torchres_isotropic -pl nnUNetPlannerResEncL_torchres
