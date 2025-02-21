@@ -75,11 +75,11 @@ nnUNetv2_plan_experiment -d dataset_id -overwrite_target_spacing 1 1 1 -overwrit
 7. Preprocess the dataset. This takes a long time.
 
 ```bash
-nnUNetv2_preprocess -d dataset_id -npfp 64 -np 64 -c 3d_fullres -pl nnUNetPlannerResEncL_torchres_isotropic
+nnUNetv2_preprocess -d dataset_id -npfp 64 -np 64 -c 3d_fullres -pl nnUNetPlannerResEncL_torchres_isotropic --npz
 ```
 
 ### Train
 
 ```bash
-nnUNetv2_train dataset_id 3d_fullres all -p nnUNetPlannerResEncL_torchres_isotropic
+nnUNetv2_train dataset_id 3d_fullres all -p nnUNetPlannerResEncL_torchres_isotropic --npz
 ```
