@@ -15,6 +15,7 @@ import torch
 from batchgenerators.utilities.file_and_folder_operations import join
 from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 import os
+import pandas as pd
 
 def split_files(files_input, files_output, num_parts, part_id):
     """
@@ -43,12 +44,12 @@ def split_files(files_input, files_output, num_parts, part_id):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run nnUNet prediction with custom arguments.")
-    parser.add_argument('--pth', type=str, default='/mnt/ccvl15/psalvad2/nnUNet_raw/Dataset244_smallAtlasUCSF/imagesTr/', 
+    parser.add_argument('--pth', type=str, default='/projects/bodymaps/Data/image_only/AbdomenAtlasPro/AbdomenAtlasPro/', 
                         help="Path to input images folder")
-    parser.add_argument('--outdir', type=str, default='/mnt/ccvl15/psalvad2/Dataset244_smallAtlasUCSF_suborgans/', 
+    parser.add_argument('--outdir', type=str, default='/projects/bodymaps/Pedro/data/JHH_liver_segments/', 
                         help="Path to output folder for predictions")
     parser.add_argument('--checkpoint', type=str, 
-                        default='/mnt/ccvl15/psalvad2/nnUNetOrgansAndSubSegments', 
+                        default='./nnUNetOrgansAndSubSegments/', 
                         help="Path to model checkpoint folder")
     parser.add_argument('--num_parts', type=int, default=1, 
                         help="Number of parts to split the task into")
@@ -58,8 +59,37 @@ def parse_args():
                         help="ID of the gpu to be used")
     parser.add_argument('--workers', type=int, default=2, 
                         help="Number of worker processes for preprocessing and segmentation export")
+    parser.add_argument('--BDMAP_format', action='store_true', 
+                    help="Enable BDMAP format")
+    parser.add_argument('--ids', default=None, help='Path to csv with a BDMAP ID column and the cases you want to inference')            
+    parser.add_argument('--reset', action='store_true', 
+                    help="Overwrites old cases")
     return parser.parse_args()
 
+
+def filter_existing_outputs(files_input, files_output):
+    """
+    Filter out cases where the output file already exists.
+    
+    Parameters:
+        files_input (list): A list of input file paths (or lists of file paths).
+        files_output (list): A list of output file paths.
+        
+    Returns:
+        tuple: Two lists, (filtered_files_input, filtered_files_output), where
+               each pair corresponds to an output that does not already exist.
+    """
+    filtered_input = []
+    filtered_output = []
+    
+    for inp, out in zip(files_input, files_output):
+        if not os.path.exists(out+'.nii.gz'):
+            filtered_input.append(inp)
+            filtered_output.append(out)
+        else:
+            print(f"Skipping already saved output: {out}")
+    
+    return filtered_input, filtered_output
 
 def main():
     args = parse_args()
@@ -76,16 +106,40 @@ def main():
         allow_tqdm=True
     )
 
-    # Collect input and output files
-    files_input = [[os.path.join(args.pth, file)] for file in sorted(os.listdir(args.pth)) if file.endswith('.nii.gz')]
-    files_output = [os.path.join(args.outdir, file.replace('.nii.gz','')) for file in sorted(os.listdir(args.pth)) if file.endswith('.nii.gz')]
-    files_input, files_output = split_files(files_input, files_output, args.num_parts, args.part_id)
+    if args.ids is not None:
+        ids = pd.read_csv(args.ids)
+        ids = sorted(ids['BDMAP ID'].to_list())
+    else:
+        ids = sorted(os.listdir(args.pth))
 
+    # Collect input and output files
+    if args.BDMAP_format:
+        print('Path:',args.pth)
+        print('Files in path:',len(ids))
+
+        files_input = [[os.path.join(args.pth, folder, 'ct.nii.gz')] 
+                        for folder in ids 
+                        if ('BDMAP' in folder)]
+        print('Input files before split:',len(files_input))
+        files_output = [os.path.join(args.outdir, folder) 
+                        for folder in ids 
+                        if ('BDMAP' in folder)]
+        files_input, files_output = filter_existing_outputs(files_input, files_output)
+        files_input, files_output = split_files(files_input, files_output, args.num_parts, args.part_id)
+    else:
+        files_input = [[os.path.join(args.pth, file+'.nii.gz')] for file in ids]
+        files_output = [os.path.join(args.outdir, file) for file in ids]
+        files_input, files_output = filter_existing_outputs(files_input, files_output)
+        files_input, files_output = split_files(files_input, files_output, args.num_parts, args.part_id)
+
+    print('Input:', files_input[:10])
+    print('Output:', files_output[:10])
+    print(f'Cases to predict in part {args.part_id}: {len(files_input)}')
 
 
     # Initialize the network architecture and load the checkpoint
     predictor.initialize_from_trained_model_folder(
-        join(nnUNet_results, args.checkpoint),
+        join(args.checkpoint),
         use_folds=('all',),
         checkpoint_name='checkpoint_final.pth',
     )
@@ -94,7 +148,7 @@ def main():
     predictor.predict_from_files(
         files_input, files_output,
         save_probabilities=False,
-        overwrite=False,
+        overwrite=args.reset,
         num_processes_preprocessing=args.workers,
         num_processes_segmentation_export=args.workers,
         folder_with_segs_from_prev_stage=None,
