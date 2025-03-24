@@ -33,6 +33,12 @@ files_output = ['path/to/output/first/ct.nii.gz','path/to/output/second/ct.nii.g
 ```
 </details>
 
+Split the resulting combined labels to the BDMAP format.
+```bash
+python split_labels.py --input_dir path/to/output/of/last/command --output_dir /path/to/new/output_directory/ --num_workers 10
+```
+
+
 ---
 # Train
 
