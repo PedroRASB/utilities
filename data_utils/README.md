@@ -5,7 +5,7 @@
 2- Run inference the trained model:
 
 ```bash
-python PredictSubOrgansnUnet.py --num_parts 1 --part_id 0 --gpu 0 --pth path/to/ct/scans --outdir path/to/output --checkpoint path/to/model/weights
+python PredictSubOrgansnUnet.py --num_parts 1 --part_id 0 --gpu 0 --pth path/to/ct/scans --outdir path/to/output --checkpoint path/to/model/weights --BDMAP_format
 ```
 
 <details>
@@ -15,19 +15,23 @@ You can run this code on multiple GPUs, each one inferencing on a different part
 Example of splitting it in 4 parts:
 
 ```bash
-    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 0 --gpu 0
-    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 1 --gpu 1
-    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 2 --gpu 2
-    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 3 --gpu 3
+    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 0 --gpu 0 --pth path/to/ct/scans --outdir path/to/output --checkpoint path/to/model/weights --BDMAP_format
+    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 1 --gpu 1 --pth path/to/ct/scans --outdir path/to/output --checkpoint path/to/model/weights --BDMAP_format
+    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 2 --gpu 2 --pth path/to/ct/scans --outdir path/to/output --checkpoint path/to/model/weights --BDMAP_format
+    python PredictSubOrgansnUnet.py --num_parts 4 --part_id 3 --gpu 3 --pth path/to/ct/scans --outdir path/to/output --checkpoint path/to/model/weights --BDMAP_format
 ```
   
 </details>
 
-Important: If your input folder (images) are not in the standard nnU-Net format, you need to change files_input inside PredictSubOrgansnUnet.py. files_input should be a list of lists. Each of these lists should contain the path to one nii.gz file you want to inference. The variable files_output is a list of strings. It has the output locations for each of the input files. See https://github.com/MIC-DKFZ/nnUNet/blob/master/nnunetv2/inference/readme.md for more information.
+<details>
+  <summary>Data format</summary>
+  
+If your input folder (images) are not in the standard nnU-Net or BDMAP format, you need to change files_input inside PredictSubOrgansnUnet.py. files_input should be a list of lists. Each of these lists should contain the path to one nii.gz file you want to inference. The variable files_output is a list of strings. It has the output locations for each of the input files. See https://github.com/MIC-DKFZ/nnUNet/blob/master/nnunetv2/inference/readme.md for more information.
 ```python
 files_input = [['path/to/first/ct.nii.gz'],['path/to/second/ct.nii.gz'],...,['path/to/last/ct.nii.gz']]
 files_output = ['path/to/output/first/ct.nii.gz','path/to/output/second/ct.nii.gz',...,'path/to/output/last/ct.nii.gz']
 ```
+</details>
 
 ---
 # Train
