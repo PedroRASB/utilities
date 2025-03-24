@@ -124,13 +124,13 @@ def main():
         files_output = [os.path.join(args.outdir, folder) 
                         for folder in ids 
                         if ('BDMAP' in folder)]
-        files_input, files_output = filter_existing_outputs(files_input, files_output)
         files_input, files_output = split_files(files_input, files_output, args.num_parts, args.part_id)
     else:
         files_input = [[os.path.join(args.pth, file+'.nii.gz')] for file in ids]
         files_output = [os.path.join(args.outdir, file) for file in ids]
-        files_input, files_output = filter_existing_outputs(files_input, files_output)
         files_input, files_output = split_files(files_input, files_output, args.num_parts, args.part_id)
+        
+    files_input, files_output = filter_existing_outputs(files_input, files_output)
 
     print('Input:', files_input[:10])
     print('Output:', files_output[:10])
